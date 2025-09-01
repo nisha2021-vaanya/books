@@ -1,5 +1,5 @@
 -- ================================================
--- 📚 Bookstore Database Project (PostgreSQL)
+--📚 Bookstore Database Project (PostgreSQL)
 -- ================================================
 
 -- Drop existing tables if they exist
