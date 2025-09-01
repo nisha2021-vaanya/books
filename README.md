@@ -136,3 +136,5 @@ Identify top customers and high-value orders.
 Monitor stock levels and inventory management.
 Determine pricing trends and revenue contribution per book.
 
+## Project Link
+https://github.com/nisha2021-vaanya/books/tree/main
