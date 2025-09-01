@@ -1,150 +1,138 @@
--- ================================================
---📚 Bookstore Database Project (PostgreSQL)
--- ================================================
+# Bookstore Database Project
 
--- Drop existing tables if they exist
-DROP TABLE IF EXISTS Orders;
-DROP TABLE IF EXISTS Customers;
-DROP TABLE IF EXISTS Books;
+## 📚 Project Overview
+This project implements a **Bookstore Database** using PostgreSQL. It includes tables for **Books**, **Customers**, and **Orders**, and performs both basic and advanced queries for analysis.
 
--- =========================
--- 1) Create Books Table
--- =========================
-CREATE TABLE Books (
-    Book_ID SERIAL PRIMARY KEY,
-    Title VARCHAR(100),
-    Author VARCHAR(100),
-    Genre VARCHAR(50),
-    Published_Year INT,
-    Price NUMERIC(10, 2),
-    Stock INT
-);
+**Objectives:**
+- Retrieve and filter books based on genre and publication year.
+- Track customer information by city and country.
+- Analyze orders by quantity, total amount, and customer spending.
+- Aggregate sales, revenue, and stock data.
+- Identify top-selling books and authors.
 
--- =========================
--- 2) Create Customers Table
--- =========================
-CREATE TABLE Customers (
-    Customer_ID SERIAL PRIMARY KEY,
-    Name VARCHAR(100),
-    Email VARCHAR(100),
-    Phone VARCHAR(15),
-    City VARCHAR(50),
-    Country VARCHAR(150)
-);
+---
 
--- =========================
--- 3) Create Orders Table
--- =========================
-CREATE TABLE Orders (
-    Order_ID SERIAL PRIMARY KEY,
-    Customer_ID INT REFERENCES Customers(Customer_ID),
-    Book_ID INT REFERENCES Books(Book_ID),
-    Order_Date DATE,
-    Quantity INT,
-    Total_Amount NUMERIC(10, 2)
-);
+## 🗄 Database Structure
 
--- ================================================
--- 🔹 Basic Queries
--- ================================================
+**Tables:**
 
--- 1) Retrieve all books in the "Fiction" genre
-SELECT * FROM Books WHERE Genre = 'Fiction';
+1. **Books**
+- `Book_ID` (Primary Key)
+- `Title`, `Author`, `Genre`, `Published_Year`
+- `Price`, `Stock`
 
--- 2) Find books published after 1950
-SELECT * FROM Books WHERE Published_Year > 1950;
+2. **Customers**
+- `Customer_ID` (Primary Key)
+- `Name`, `Email`, `Phone`, `City`, `Country`
 
--- 3) List all customers from Canada
-SELECT * FROM Customers WHERE Country = 'Canada';
+3. **Orders**
+- `Order_ID` (Primary Key)
+- `Customer_ID` (Foreign Key)
+- `Book_ID` (Foreign Key)
+- `Order_Date`, `Quantity`, `Total_Amount`
 
--- 4) Show orders placed in November 2023
-SELECT * FROM Orders
-WHERE Order_Date BETWEEN '2023-11-01' AND '2023-11-30';
+---
 
--- 5) Retrieve the total stock of books available
-SELECT SUM(Stock) AS Total_Stock FROM Books;
+## 📝 Sample SQL Queries
 
--- 6) Find the details of the most expensive book
-SELECT * FROM Books ORDER BY Price DESC LIMIT 1;
+### Basic Queries
 
--- 7) Show all customers who ordered more than 1 quantity
-SELECT * FROM Orders WHERE Quantity > 1;
+```sql
+-- Retrieve all books in the "Fiction" genre
+SELECT * FROM books WHERE genre = 'Fiction';
 
--- 8) Retrieve all orders where total amount exceeds $20
-SELECT * FROM Orders WHERE Total_Amount > 20;
+-- Find books published after 1950
+SELECT * FROM books WHERE published_year > 1950;
 
--- 9) List all unique genres
-SELECT DISTINCT Genre FROM Books;
+-- List all customers from Canada
+SELECT * FROM customers WHERE country = 'Canada';
 
--- 10) Find the book with the lowest stock
-SELECT * FROM Books ORDER BY Stock ASC LIMIT 1;
+-- Show orders placed in November 2023
+SELECT * FROM orders WHERE order_date BETWEEN '2023-11-01' AND '2023-11-30';
 
--- 11) Calculate the total revenue generated
-SELECT SUM(Total_Amount) AS Total_Revenue FROM Orders;
+-- Total stock of books available
+SELECT SUM(stock) AS total_stock FROM books;
 
--- ================================================
--- 🔹 Advanced Queries
--- ================================================
+-- Most expensive book
+SELECT book_id, MAX(price) AS expensive_book
+FROM books
+GROUP BY book_id
+ORDER BY expensive_book DESC;
 
--- 1) Total number of books sold per genre
-SELECT b.Genre, SUM(o.Quantity) AS Books_Sold
-FROM Books b
-JOIN Orders o ON o.Book_ID = b.Book_ID
-GROUP BY b.Genre;
+-- Customers who ordered more than 1 quantity
+SELECT * FROM orders WHERE quantity > 1;
 
--- 2) Average price of Fantasy books
-SELECT AVG(Price) AS Avg_Price
-FROM Books
-WHERE Genre = 'Fantasy';
+Advanced Queries
+-- Total books sold per genre
+SELECT b.genre, SUM(o.quantity) AS books_sold
+FROM books AS b
+JOIN orders AS o ON o.book_id = b.book_id
+GROUP BY b.genre;
 
--- 3) Customers with at least 2 orders
-SELECT o.Customer_ID, c.Name, COUNT(o.Order_ID) AS Order_Count
-FROM Orders o
-JOIN Customers c ON o.Customer_ID = c.Customer_ID
-GROUP BY o.Customer_ID, c.Name
-HAVING COUNT(o.Order_ID) >= 2;
+-- Average price of Fantasy books
+SELECT AVG(price) AS average_price
+FROM books
+WHERE genre = 'Fantasy';
 
--- 4) Most frequently ordered book
-SELECT o.Book_ID, b.Title, COUNT(o.Order_ID) AS Order_Count
-FROM Orders o
-JOIN Books b ON b.Book_ID = o.Book_ID
-GROUP BY o.Book_ID, b.Title
-ORDER BY Order_Count DESC
+-- Customers with at least 2 orders
+SELECT o.customer_id, c.name, COUNT(o.order_id) AS order_count
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+GROUP BY o.customer_id, c.name
+HAVING COUNT(o.order_id) >= 2;
+
+-- Most frequently ordered book
+SELECT o.book_id, b.title, COUNT(o.order_id) AS order_count
+FROM orders o
+JOIN books b ON b.book_id = o.book_id
+GROUP BY o.book_id, b.title
+ORDER BY order_count DESC
 LIMIT 1;
 
--- 5) Top 3 expensive Fantasy books
-SELECT Book_ID, Title, Price
-FROM Books
-WHERE Genre = 'Fantasy'
-ORDER BY Price DESC
+-- Top 3 most expensive Fantasy books
+SELECT book_id, title, price AS expensive_book
+FROM books
+WHERE genre = 'Fantasy'
+ORDER BY price DESC
 LIMIT 3;
 
--- 6) Total quantity of books sold by each author
-SELECT b.Author, SUM(o.Quantity) AS Total_Quantity
-FROM Orders o
-JOIN Books b ON b.Book_ID = o.Book_ID
-GROUP BY b.Author;
+-- Total quantity sold by each author
+SELECT b.author, SUM(o.quantity) AS total_quantity
+FROM orders o
+JOIN books b ON b.book_id = o.book_id
+GROUP BY b.author;
 
--- 7) Cities where customers spent over $30
-SELECT c.City, SUM(o.Total_Amount) AS City_Spending
-FROM Customers c
-JOIN Orders o ON o.Customer_ID = c.Customer_ID
-GROUP BY c.City
-HAVING SUM(o.Total_Amount) > 30;
+-- Customers who spent over $30 by city
+SELECT c.city, o.total_amount
+FROM customers c
+JOIN orders o ON o.customer_id = c.customer_id
+WHERE o.total_amount >= 30
+GROUP BY c.city, o.total_amount;
 
--- 8) Customer who spent the most
-SELECT c.Customer_ID, c.Name, SUM(o.Total_Amount) AS Total_Spent
-FROM Orders o
-JOIN Customers c ON o.Customer_ID = c.Customer_ID
-GROUP BY c.Customer_ID, c.Name
-ORDER BY Total_Spent DESC
+-- Customer who spent the most
+SELECT c.customer_id, c.name, SUM(o.total_amount) AS total_spent
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+GROUP BY c.customer_id, c.name
+ORDER BY total_spent DESC
 LIMIT 1;
 
--- 9) Stock remaining after fulfilling all orders
-SELECT b.Book_ID, b.Title, b.Stock,
-       COALESCE(SUM(o.Quantity), 0) AS Ordered_Qty,
-       b.Stock - COALESCE(SUM(o.Quantity), 0) AS Remaining_Qty
-FROM Books b
-LEFT JOIN Orders o ON b.Book_ID = o.Book_ID
-GROUP BY b.Book_ID, b.Title, b.Stock
-ORDER BY b.Book_ID;
+-- Stock remaining after fulfilling all orders
+SELECT b.book_id, b.title, b.stock, COALESCE(SUM(o.quantity), 0) AS order_quantity, 
+       b.stock - COALESCE(SUM(o.quantity), 0) AS remaining_quantity
+FROM books b
+LEFT JOIN orders o ON b.book_id = o.book_id
+GROUP BY b.book_id, b.title, b.stock
+ORDER BY b.book_id;
+
+## Technologies Used
+PostgreSQL
+SQL (Joins, Aggregations, Window Functions)
+Database Design & Analysis
+
+## Key Insights
+Track sales trends by genre and author.
+Identify top customers and high-value orders.
+Monitor stock levels and inventory management.
+Determine pricing trends and revenue contribution per book.
+
